@@ -47,7 +47,7 @@
  */
 "use strict";
 
-var URL_MATCH = /^[^\?]+\.(js|css)(\?|$)/;
+var URL_MATCH = /./; // /^[^\?]+\.(js|css)(\?|$)/;
 
 if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     self instanceof ServiceWorkerGlobalScope) {
@@ -61,7 +61,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     }
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
-        if (!req.url.match(URL_MATCH)) {
+        if (!req.url.match(URL_MATCH) || req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
             logEvent("skip", req);
             return;
         }
@@ -72,11 +72,18 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                     logEvent("hit", req);
                     return res;
                 }
-                logEvent("fetch", req);
-                return fetch(req).then(function (res) {
-                    logEvent("fetched", req);
-                    cache.put(req, res.clone());
-                    return res;
+                logEvent("miss", req);
+                return generateCacheDigest(cache).then(function (digest) {
+                    console.log("cache-digest: " + digest);
+                    if (digest != null) {
+                        // req = new Request(req, {headers: {"cache-digest", digest}});
+                    }
+                    logEvent("fetch", req);
+                    return fetch(req).then(function (res) {
+                        logEvent("fetched", req);
+                        cache.put(req, res.clone());
+                        return res;
+                    });
                 });
             });
         }));
@@ -125,6 +132,39 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
 
 }
 
+// returns a promise that returns the cache digest value
+function generateCacheDigest(cache) {
+    var hashes = [];
+    return cache.keys().then(function (reqs) {
+        // collect 31-bit hashes of fresh responses
+        return Promise.all(reqs.map(function (req) {
+            return cache.match(req).then(function (resp) {
+                if (resp && isFresh(resp))
+                    hashes.push(sha256(req.url)[7] & 0x7fffffff);
+            });
+        })).then(function () {
+            var pbits = 7;
+            var nbits = Math.floor(Math.log(Math.max(hashes.length, 1)) / Math.log(2) + 0.7);
+            if (nbits + pbits > 31)
+                return null;
+            for (var i = 0; i < hashes.length; ++i)
+                hashes[i] &= 1 << (pbits + nbits) - 1;
+            var digestValue = (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
+            return base64Encode(digestValue);
+        });
+    });
+}
+
+function isFresh(resp) {
+    if (resp.headers.get("expires") != null)
+        return true;
+    var cc = resp.headers.getAll("cache-control").join(", ").split(/\s*,\s*/);
+    for (var cci = 0; cci != cc.length; ++cci)
+        if (cc[cci].match(/^max-age\s*=\s*/))
+            return true;
+    return false;
+}
+
 function BitCoder() {
     this.value = [];
     this.leftBits = 0;
@@ -142,12 +182,12 @@ BitCoder.prototype.addBit = function (b) {
 };
 
 BitCoder.prototype.addBits = function (v, nbits) {
-    if (nbits == 0)
-        return;
-    --nbits;
-    do {
-        this.addBit(v & (1 << nbits));
-    } while (nbits-- != 0);
+    if (nbits != 0) {
+        --nbits;
+        do {
+            this.addBit(v & (1 << nbits));
+        } while (nbits-- != 0);
+    }
     return this;
 };
 
@@ -312,4 +352,3 @@ var sha256 = function () {
         return [h0, h1, h2, h3, h4, h5, h6, h7];
     };
 }();
-
