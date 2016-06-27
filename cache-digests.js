@@ -180,8 +180,11 @@ function isFresh(headers, now) {
         } else if (name.match(/^cache-control$/i) != null) {
             var directives = value.split(/\s*,\s*/);
             for (var d of directives) {
-                if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null)
+                if (d.match(/^\s*no-(?:cache|store)\s*$/) != null) {
+                    return false;
+                } else if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null) {
                     maxAge = Math.min(RegExp.$1, maxAge || Infinity);
+                }
             }
         } else if (name.match(/^date$/i) != null) {
             date = Date.parse(value);
