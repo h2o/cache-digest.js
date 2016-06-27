@@ -124,8 +124,8 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
         is((new BitCoder).gcsEncode([3, 10], 2).value, [0b11101100]);
         is((new BitCoder).gcsEncode([1025], 8).value, [0b00001000, 0b00001000]);
         is(base64Encode(["h", "e", "l", "l", "o"].map(function (c) { return c.charCodeAt(0) })), "aGVsbG8");
-        is(sha256("")[7], 0x7852b855, "sha256 empty string");
-        is(sha256("hello world")[7], 0xe2efcde9 | 0, "sha256 hello world");
+        is(sha256(""), [0xe3b0c442, 0x98fc1c14, 0x9afbf4c8, 0x996fb924, 0x27ae41e4, 0x649b934c, 0xa495991b, 0x7852b855].map(function (v) { return v | 0; }), "sha256 empty string");
+        is(sha256("hello world"), [0xb94d27b9, 0x934d3e08, 0xa52e52d7, 0xda7dabfa, 0xc484efe3, 0x7a5380ee, 0x9088f7ac, 0xe2efcde9].map(function (v) { return v | 0; }), "sha256 hello world");
         console.log("1.." + ntests);
         process.exit(failed ? 127 : 0);
     }, 0);
