@@ -47,8 +47,6 @@
  */
 "use strict";
 
-var URL_MATCH = /./; // /^[^\?]+\.(js|css)(\?|$)/;
-
 if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     self instanceof ServiceWorkerGlobalScope) {
 
@@ -61,14 +59,14 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     }
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
-        if (!req.url.match(URL_MATCH) || req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
+        if (req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
             logEvent("skip", req);
             return;
         }
         logEvent("start", req);
         evt.respondWith(openCache().then(function (cache) {
             return cache.match(req).then(function (res) {
-                if (res) {
+                if (res && isFresh(res.headers.entries(), Date.now())) {
                     logEvent("hit", req);
                     return res;
                 }
@@ -81,7 +79,10 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                     logEvent("fetch", req);
                     return fetch(req).then(function (res) {
                         logEvent("fetched", req);
-                        cache.put(req, res.clone());
+                        if (res.status == 200 && isFresh(res.headers.entries(), Date.now())) {
+                            cache.put(req, res.clone());
+                            logEvent("cached", req);
+                        }
                         return res;
                     });
                 });
@@ -143,8 +144,9 @@ function generateCacheDigest(cache) {
     return cache.keys().then(function (reqs) {
         // collect 31-bit hashes of fresh responses
         return Promise.all(reqs.map(function (req) {
+            var now = Date.now();
             return cache.match(req).then(function (resp) {
-                if (resp && isFresh(resp.headers.entries()))
+                if (resp && isFresh(resp.headers.entries(), now))
                     hashes.push(sha256(req.url)[7] & 0x7fffffff);
             });
         })).then(function () {
@@ -161,10 +163,7 @@ function generateCacheDigest(cache) {
 }
 
 function isFresh(headers, now) {
-    if (typeof now === "undefined")
-        now = Date.now();
-
-    var date = now, maxAge = null;
+    var date = 0, maxAge = null;
     for (var nv of headers) {
         var name = nv[0], value = nv[1];
         if (name.match(/^expires$/i) != null) {
