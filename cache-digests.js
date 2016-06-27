@@ -54,11 +54,18 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     function openCache() {
         return caches.open("v1");
     }
+    function logRequest(req) {
+        var s = req.method + " " + req.url + "\n";
+        for (var nv of req.headers.entries())
+            s += nv[0] + ": " + nv[1] + "\n";
+        console.log(s);
+    }
     function logEvent(name, req) {
         console.log(name + ":" + req.url);
     }
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
+        logRequest(req);
         if (req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
             logEvent("skip", req);
             return;
