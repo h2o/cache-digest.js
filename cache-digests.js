@@ -120,6 +120,11 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                 return ok(result === expected, name);
             }
         }
+        ok(isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:12:00Z")), "expires-fresh");
+        ok(!isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:13:00Z")), "expires-stale");
+        ok(isFresh([["Cache-Control", "must-revalidate, max-age=600"]], Date.parse("2016-06-27T02:12:00Z")), "max-age-wo-date");
+        ok(isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:22:00Z")), "max-age-fresh");
+        ok(!isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:23:00Z")), "max-age-stale");
         is((new BitCoder).gcsEncode([], 2).value, []);
         is((new BitCoder).gcsEncode([3, 10], 2).value, [0b11101100]);
         is((new BitCoder).gcsEncode([1025], 8).value, [0b00001000, 0b00001000]);
@@ -139,7 +144,7 @@ function generateCacheDigest(cache) {
         // collect 31-bit hashes of fresh responses
         return Promise.all(reqs.map(function (req) {
             return cache.match(req).then(function (resp) {
-                if (resp && isFresh(resp))
+                if (resp && isFresh(resp.headers.entries()))
                     hashes.push(sha256(req.url)[7] & 0x7fffffff);
             });
         })).then(function () {
@@ -155,13 +160,33 @@ function generateCacheDigest(cache) {
     });
 }
 
-function isFresh(resp) {
-    if (resp.headers.get("expires") != null)
-        return true;
-    var cc = resp.headers.getAll("cache-control").join(", ").split(/\s*,\s*/);
-    for (var cci = 0; cci != cc.length; ++cci)
-        if (cc[cci].match(/^max-age\s*=\s*/))
+function isFresh(headers, now) {
+    if (typeof now === "undefined")
+        now = Date.now();
+
+    var date = now, maxAge = null;
+    for (var nv of headers) {
+        var name = nv[0], value = nv[1];
+        if (name.match(/^expires$/i) != null) {
+            var parsed = Date.parse(value);
+            if (parsed && parsed > now)
+                return true;
+        } else if (name.match(/^cache-control$/i) != null) {
+            var directives = value.split(/\s*,\s*/);
+            for (var d of directives) {
+                if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null)
+                    maxAge = Math.min(RegExp.$1, maxAge || Infinity);
+            }
+        } else if (name.match(/^date$/i) != null) {
+            date = Date.parse(value);
+        }
+    }
+
+    if (maxAge != null) {
+        if (date + maxAge * 1000 > now)
             return true;
+    }
+
     return false;
 }
 
