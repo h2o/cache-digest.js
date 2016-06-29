@@ -161,8 +161,9 @@ function generateCacheDigest(cache) {
             var nbits = Math.floor(Math.log(Math.max(hashes.length, 1)) / Math.log(2) + 0.7);
             if (nbits + pbits > 31)
                 return null;
+            var mask = (1 << pbits + nbits) - 1;
             for (var i = 0; i < hashes.length; ++i)
-                hashes[i] &= 1 << (pbits + nbits) - 1;
+                hashes[i] &= mask;
             var digestValue = (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
             return base64Encode(digestValue);
         });
