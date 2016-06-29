@@ -217,10 +217,10 @@ BitCoder.prototype.addBit = function (b) {
 
 BitCoder.prototype.addBits = function (v, nbits) {
     if (nbits != 0) {
-        --nbits;
         do {
+            --nbits;
             this.addBit(v & (1 << nbits));
-        } while (nbits-- != 0);
+        } while (nbits != 0);
     }
     return this;
 };
