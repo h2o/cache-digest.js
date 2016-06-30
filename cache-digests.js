@@ -148,6 +148,8 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
         is((new BitCoder).gcsEncode([], 2).value, []);
         is((new BitCoder).gcsEncode([3, 10], 2).value, [0b11101100]);
         is((new BitCoder).gcsEncode([1025], 8).value, [0b00001000, 0b00001000]);
+        is(base64Encode(["h", "e", "l"].map(function (c) { return c.charCodeAt(0) })), "aGVs");
+        is(base64Encode(["h", "e", "l", "l"].map(function (c) { return c.charCodeAt(0) })), "aGVsbA");
         is(base64Encode(["h", "e", "l", "l", "o"].map(function (c) { return c.charCodeAt(0) })), "aGVsbG8");
         is(sha256(""), [0xe3b0c442, 0x98fc1c14, 0x9afbf4c8, 0x996fb924, 0x27ae41e4, 0x649b934c, 0xa495991b, 0x7852b855].map(function (v) { return v | 0; }), "sha256 empty string");
         is(sha256("hello world"), [0xb94d27b9, 0x934d3e08, 0xa52e52d7, 0xda7dabfa, 0xc484efe3, 0x7a5380ee, 0x9088f7ac, 0xe2efcde9].map(function (v) { return v | 0; }), "sha256 hello world");
@@ -228,27 +230,11 @@ var base64Encode = function (buf) {
     var TOKENS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
     return function base64Encode(buf) {
         var str = '';
-        var quad;
-        for (var pos = 0; buf.length - pos >= 3; pos += 3) {
-            // concat 3 byte (4 token for base64)
-            quad = buf[pos] << 16 | buf[pos + 1] << 8 | buf[pos + 2];
-            // change each 6bit from top to char
-            str += TOKENS[(quad >> 18)];
-            str += TOKENS[(quad >> 12) & 63];
-            str += TOKENS[(quad >>  6) & 63];
-            str += TOKENS[quad & 63];
+        for (var pos = 0; pos < buf.length; pos += 3) {
+            var quad = buf[pos] << 16 | buf[pos + 1] << 8 | buf[pos + 2];
+            str += TOKENS[(quad >> 18)] + TOKENS[(quad >> 12) & 63] + TOKENS[(quad >>  6) & 63] + TOKENS[quad & 63];
         }
-        if (pos != buf.length) {
-            quad = buf[pos] << 16;
-            str += TOKENS[quad >> 18]; // first 6bit
-            if (pos + 1 != buf.length) {
-                quad |= buf[pos + 1] << 8;
-                str += TOKENS[(quad >> 12) & 63];
-                str += TOKENS[(quad >>  6) & 63];
-            } else {
-                str += TOKENS[(quad >> 12) & 63];
-            }
-        }
+        str = str.substring(0, str.length - pos + buf.length);
         return str;
     };
 }();
