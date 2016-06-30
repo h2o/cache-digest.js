@@ -51,9 +51,6 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     self instanceof ServiceWorkerGlobalScope) {
 
     /* ServiceWorker */
-    function openCache() {
-        return caches.open("v1");
-    }
     function logRequest(req) {
         var s = req.method + " " + req.url + "\n";
         for (var nv of req.headers.entries())
@@ -75,7 +72,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
             logInfo(req, "skip");
             return;
         }
-        evt.respondWith(openCache().then(function (cache) {
+        evt.respondWith(caches.open("v1").then(function (cache) {
             return cache.match(req).then(function (res) {
                 if (res) {
                     logInfo(req, "hit");
