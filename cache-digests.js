@@ -20,10 +20,10 @@
  * IN THE SOFTWARE.
  *
  *
- * SHA256 implementation is based on https://github.com/emn178/js-sha256/,
+ * Includes a minified SHA256 implementation taken from https://gist.github.com/kazuho/bb8aab1a2946bbf42127d8a6197ad18c,
  * licensed under the following copyright:
  *
- * Copyright (c) 2015 Chen Yi-Cyuan
+ * Copyright (c) 2015,2016 Chen Yi-Cyuan, Kazuho Oku
  *
  * MIT License
  *
@@ -253,119 +253,4 @@ var base64Encode = function (buf) {
     };
 }();
 
-/* based on https://github.com/emn178/js-sha256/, see top of the file */
-var sha256 = function () {
-    var EXTRA = [-2147483648, 8388608, 32768, 128];
-    var SHIFT = [24, 16, 8, 0];
-    var K =[0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
-    return function sha256(message) {
-        var blocks = [];
-        var code, first = true, end = false, i, j, index = 0, start = 0, bytes = 0, length = message.length, s0, s1, maj, t1, t2, ch, ab, da, cd, bc;
-        var h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a, h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
-        var block = 0;
-
-        do {
-            blocks[0] = block;
-            blocks[16] = blocks[1] = blocks[2] = blocks[3] = blocks[4] = blocks[5] = blocks[6] = blocks[7] = blocks[8] = blocks[9] = blocks[10] = blocks[11] = blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
-            for (i = start; index < length && i < 64; ++index) {
-                code = message.charCodeAt(index);
-                if (code < 0x80) {
-                    blocks[i >> 2] |= code << SHIFT[i++ & 3];
-                } else if (code < 0x800) {
-                    blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-                } else if (code < 0xd800 || code >= 0xe000) {
-                    blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-                } else {
-                    code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
-                    blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-                }
-            }
-            bytes += i - start;
-            start = i - 64;
-            if(index == length) {
-                blocks[i >> 2] |= EXTRA[i & 3];
-                ++index;
-            }
-            block = blocks[16];
-            if(index > length && i < 56) {
-                blocks[15] = bytes << 3;
-                end = true;
-            }
-
-            var a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
-            for(j = 16; j < 64; ++j) {
-                // rightrotate
-                t1 = blocks[j - 15];
-                s0 = ((t1 >>> 7) | (t1 << 25)) ^ ((t1 >>> 18) | (t1 << 14)) ^ (t1 >>> 3);
-                t1 = blocks[j - 2];
-                s1 = ((t1 >>> 17) | (t1 << 15)) ^ ((t1 >>> 19) | (t1 << 13)) ^ (t1 >>> 10);
-                blocks[j] = blocks[j - 16] + s0 + blocks[j - 7] + s1 << 0;
-            }
-
-            bc = b & c;
-            for(j = 0; j < 64; j += 4) {
-                if(first) {
-                    ab = 704751109;
-                    t1 = blocks[0] - 210244248;
-                    h = t1 - 1521486534 << 0;
-                    d = t1 + 143694565 << 0;
-                    first = false;
-                } else {
-                    s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
-                    s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
-                    ab = a & b;
-                    maj = ab ^ (a & c) ^ bc;
-                    ch = (e & f) ^ (~e & g);
-                    t1 = h + s1 + ch + K[j] + blocks[j];
-                    t2 = s0 + maj;
-                    h = d + t1 << 0;
-                    d = t1 + t2 << 0;
-                }
-                s0 = ((d >>> 2) | (d << 30)) ^ ((d >>> 13) | (d << 19)) ^ ((d >>> 22) | (d << 10));
-                s1 = ((h >>> 6) | (h << 26)) ^ ((h >>> 11) | (h << 21)) ^ ((h >>> 25) | (h << 7));
-                da = d & a;
-                maj = da ^ (d & b) ^ ab;
-                ch = (h & e) ^ (~h & f);
-                t1 = g + s1 + ch + K[j + 1] + blocks[j + 1];
-                t2 = s0 + maj;
-                g = c + t1 << 0;
-                c = t1 + t2 << 0;
-                s0 = ((c >>> 2) | (c << 30)) ^ ((c >>> 13) | (c << 19)) ^ ((c >>> 22) | (c << 10));
-                s1 = ((g >>> 6) | (g << 26)) ^ ((g >>> 11) | (g << 21)) ^ ((g >>> 25) | (g << 7));
-                cd = c & d;
-                maj = cd ^ (c & a) ^ da;
-                ch = (g & h) ^ (~g & e);
-                t1 = f + s1 + ch + K[j + 2] + blocks[j + 2];
-                t2 = s0 + maj;
-                f = b + t1 << 0;
-                b = t1 + t2 << 0;
-                s0 = ((b >>> 2) | (b << 30)) ^ ((b >>> 13) | (b << 19)) ^ ((b >>> 22) | (b << 10));
-                s1 = ((f >>> 6) | (f << 26)) ^ ((f >>> 11) | (f << 21)) ^ ((f >>> 25) | (f << 7));
-                bc = b & c;
-                maj = bc ^ (b & d) ^ cd;
-                ch = (f & g) ^ (~f & h);
-                t1 = e + s1 + ch + K[j + 3] + blocks[j + 3];
-                t2 = s0 + maj;
-                e = a + t1 << 0;
-                a = t1 + t2 << 0;
-            }
-
-            h0 = h0 + a << 0;
-            h1 = h1 + b << 0;
-            h2 = h2 + c << 0;
-            h3 = h3 + d << 0;
-            h4 = h4 + e << 0;
-            h5 = h5 + f << 0;
-            h6 = h6 + g << 0;
-            h7 = h7 + h << 0;
-        } while (!end);
-
-        return [h0, h1, h2, h3, h4, h5, h6, h7];
-    };
-}();
+var sha256=function(){var r=[-2147483648,8388608,32768,128],o=[24,16,8,0],a=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];return function(n){var t,e,f,h,c,u,v,d,i,l,A,C,g,s=[],w=!0,b=!1,j=0,k=0,m=0,p=n.length,q=1779033703,x=3144134277,y=1013904242,z=2773480762,B=1359893119,D=2600822924,E=528734635,F=1541459225,G=0;do{for(s[0]=G,s[16]=s[1]=s[2]=s[3]=s[4]=s[5]=s[6]=s[7]=s[8]=s[9]=s[10]=s[11]=s[12]=s[13]=s[14]=s[15]=0,e=k;p>j&&64>e;++j)t=n.charCodeAt(j),128>t?s[e>>2]|=t<<o[3&e++]:2048>t?(s[e>>2]|=(192|t>>6)<<o[3&e++],s[e>>2]|=(128|63&t)<<o[3&e++]):55296>t||t>=57344?(s[e>>2]|=(224|t>>12)<<o[3&e++],s[e>>2]|=(128|t>>6&63)<<o[3&e++],s[e>>2]|=(128|63&t)<<o[3&e++]):(t=65536+((1023&t)<<10|1023&n.charCodeAt(++j)),s[e>>2]|=(240|t>>18)<<o[3&e++],s[e>>2]|=(128|t>>12&63)<<o[3&e++],s[e>>2]|=(128|t>>6&63)<<o[3&e++],s[e>>2]|=(128|63&t)<<o[3&e++]);m+=e-k,k=e-64,j==p&&(s[e>>2]|=r[3&e],++j),G=s[16],j>p&&56>e&&(s[15]=m<<3,b=!0);var H=q,I=x,J=y,K=z,L=B,M=D,N=E,O=F;for(f=16;64>f;++f)v=s[f-15],h=(v>>>7|v<<25)^(v>>>18|v<<14)^v>>>3,v=s[f-2],c=(v>>>17|v<<15)^(v>>>19|v<<13)^v>>>10,s[f]=s[f-16]+h+s[f-7]+c<<0;for(g=I&J,f=0;64>f;f+=4)w?(l=704751109,v=s[0]-210244248,O=v-1521486534<<0,K=v+143694565<<0,w=!1):(h=(H>>>2|H<<30)^(H>>>13|H<<19)^(H>>>22|H<<10),c=(L>>>6|L<<26)^(L>>>11|L<<21)^(L>>>25|L<<7),l=H&I,u=l^H&J^g,i=L&M^~L&N,v=O+c+i+a[f]+s[f],d=h+u,O=K+v<<0,K=v+d<<0),h=(K>>>2|K<<30)^(K>>>13|K<<19)^(K>>>22|K<<10),c=(O>>>6|O<<26)^(O>>>11|O<<21)^(O>>>25|O<<7),A=K&H,u=A^K&I^l,i=O&L^~O&M,v=N+c+i+a[f+1]+s[f+1],d=h+u,N=J+v<<0,J=v+d<<0,h=(J>>>2|J<<30)^(J>>>13|J<<19)^(J>>>22|J<<10),c=(N>>>6|N<<26)^(N>>>11|N<<21)^(N>>>25|N<<7),C=J&K,u=C^J&H^A,i=N&O^~N&L,v=M+c+i+a[f+2]+s[f+2],d=h+u,M=I+v<<0,I=v+d<<0,h=(I>>>2|I<<30)^(I>>>13|I<<19)^(I>>>22|I<<10),c=(M>>>6|M<<26)^(M>>>11|M<<21)^(M>>>25|M<<7),g=I&J,u=g^I&K^C,i=M&N^~M&O,v=L+c+i+a[f+3]+s[f+3],d=h+u,L=H+v<<0,H=v+d<<0;q=q+H<<0,x=x+I<<0,y=y+J<<0,z=z+K<<0,B=B+L<<0,D=D+M<<0,E=E+N<<0,F=F+O<<0}while(!b);return[q,x,y,z,B,D,E,F]}}();
