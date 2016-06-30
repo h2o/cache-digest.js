@@ -118,9 +118,9 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
 
     /* bootstrap, loaded via <script src=...> */
     navigator.serviceWorker.register("/cache-digests.js", {scope: "./"}).then(function(reg) {
-        console.log(reg.scope);
+        console.log("registered cache-digests.js service worker");
     }).catch(function(e) {
-        console.log(e);
+        console.log("failed to register cache-digests.js service worker:" + e);
     });
 
 } else {
