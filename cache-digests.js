@@ -78,10 +78,20 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                     return res;
                 }
                 logEvent("miss", req);
-                return generateCacheDigest(cache).then(function (digest) {
-                    console.log("cache-digest: " + digest);
-                    if (digest != null) {
-                        // req = new Request(req, {headers: {"cache-digest", digest}});
+                return generateCacheDigests(cache).then(function (digests) {
+                    logEvent("cache-digests(" + digests + "," + req.mode + ")", req);
+                    if (digests != null) {
+                        var err = null;
+                        try {
+                            req = new Request(req);
+                            req.headers.append("cache-digests", digests);
+                            if (req.headers.get("cache-digests") == null)
+                                err = "append failed";
+                        } catch (e) {
+                            err = e;
+                        }
+                        if (err)
+                            logEvent(e, req);
                     }
                     logEvent("fetch", req);
                     return fetch(req).then(function (res) {
@@ -146,7 +156,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
 }
 
 // returns a promise that returns the cache digest value
-function generateCacheDigest(cache) {
+function generateCacheDigests(cache) {
     var hashes = [];
     return cache.keys().then(function (reqs) {
         // collect 31-bit hashes of fresh responses
@@ -165,7 +175,7 @@ function generateCacheDigest(cache) {
             for (var i = 0; i < hashes.length; ++i)
                 hashes[i] &= mask;
             var digestValue = (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
-            return base64Encode(digestValue);
+            return base64Encode(digestValue) + "; complete";
         });
     });
 }
