@@ -66,7 +66,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
         logRequest(req);
-        if (req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
+        if (req.method != "GET" || req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
             logEvent("skip", req);
             return;
         }
