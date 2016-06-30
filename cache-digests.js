@@ -60,26 +60,28 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
             s += nv[0] + ": " + nv[1] + "\n";
         console.log(s);
     }
-    function logEvent(name, req) {
-        console.log(name + ":" + req.url);
+    function logError(req, msg) {
+        console.log(req.url + ":error:" + msg);
+    }
+    function logInfo(req, msg) {
+        console.log(req.url + ":info:" + msg);
+    }
+    function logDebug(req, msg) {
+        console.log(req.url + ":debug:" + msg);
     }
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
-        logRequest(req);
         if (req.method != "GET" || req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
-            logEvent("skip", req);
+            logInfo(req, "skip");
             return;
         }
-        logEvent("start", req);
         evt.respondWith(openCache().then(function (cache) {
             return cache.match(req).then(function (res) {
                 if (res && isFresh(res.headers.entries(), Date.now())) {
-                    logEvent("hit", req);
+                    logInfo(req, "hit");
                     return res;
                 }
-                logEvent("miss", req);
-                return generateCacheDigests(cache).then(function (digests) {
-                    logEvent("cache-digests(" + digests + "," + req.mode + ")", req);
+                var requestWithDigests = function (digests) {
                     if (digests != null) {
                         var err = null;
                         try {
@@ -91,18 +93,23 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                             err = e;
                         }
                         if (err)
-                            logEvent(e, req);
+                            logError(req, e);
                     }
-                    logEvent("fetch", req);
                     return fetch(req).then(function (res) {
-                        logEvent("fetched", req);
+                        var cached = false;
                         if (res.status == 200 && isFresh(res.headers.entries(), Date.now())) {
                             cache.put(req, res.clone());
-                            logEvent("cached", req);
+                            cached = true;
                         }
+                        logInfo(req, "fetched" + (cached ? " & cached" : "") + " with cache-digests:\"" + digests + "\"");
                         return res;
                     });
-                });
+                };
+                if (req.mode == "navigate") {
+                    return generateCacheDigests(cache).then(requestWithDigests);
+                } else {
+                    return requestWithDigests(null);
+                }
             });
         }));
     });
