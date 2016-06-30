@@ -77,7 +77,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
         }
         evt.respondWith(openCache().then(function (cache) {
             return cache.match(req).then(function (res) {
-                if (res && isFresh(res.headers.entries(), Date.now())) {
+                if (res) {
                     logInfo(req, "hit");
                     return res;
                 }
@@ -97,7 +97,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                     }
                     return fetch(req).then(function (res) {
                         var cached = false;
-                        if (res.status == 200 && isFresh(res.headers.entries(), Date.now())) {
+                        if (res.status == 200) {
                             cache.put(req, res.clone());
                             cached = true;
                         }
@@ -145,11 +145,6 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                 return ok(result === expected, name);
             }
         }
-        ok(isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:12:00Z")), "expires-fresh");
-        ok(!isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:13:00Z")), "expires-stale");
-        ok(!isFresh([["Cache-Control", "must-revalidate, max-age=600"]], Date.parse("2016-06-27T02:12:00Z")), "max-age-wo-date");
-        ok(isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:22:00Z")), "max-age-fresh");
-        ok(!isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:23:00Z")), "max-age-stale");
         is((new BitCoder).gcsEncode([], 2).value, []);
         is((new BitCoder).gcsEncode([3, 10], 2).value, [0b11101100]);
         is((new BitCoder).gcsEncode([1025], 8).value, [0b00001000, 0b00001000]);
@@ -170,7 +165,7 @@ function generateCacheDigests(cache) {
         return Promise.all(reqs.map(function (req) {
             var now = Date.now();
             return cache.match(req).then(function (resp) {
-                if (resp && isFresh(resp.headers.entries(), now))
+                if (resp)
                     hashes.push(sha256(req.url)[7] & 0x7fffffff);
             });
         })).then(function () {
@@ -185,36 +180,6 @@ function generateCacheDigests(cache) {
             return base64Encode(digestValue) + "; complete";
         });
     });
-}
-
-function isFresh(headers, now) {
-    var date = 0, maxAge = null;
-    for (var nv of headers) {
-        var name = nv[0], value = nv[1];
-        if (name.match(/^expires$/i) != null) {
-            var parsed = Date.parse(value);
-            if (parsed && parsed > now)
-                return true;
-        } else if (name.match(/^cache-control$/i) != null) {
-            var directives = value.split(/\s*,\s*/);
-            for (var d of directives) {
-                if (d.match(/^\s*no-(?:cache|store)\s*$/) != null) {
-                    return false;
-                } else if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null) {
-                    maxAge = Math.min(RegExp.$1, maxAge || Infinity);
-                }
-            }
-        } else if (name.match(/^date$/i) != null) {
-            date = Date.parse(value);
-        }
-    }
-
-    if (maxAge != null) {
-        if (date + maxAge * 1000 > now)
-            return true;
-    }
-
-    return false;
 }
 
 function BitCoder() {
