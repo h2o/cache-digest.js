@@ -26,6 +26,11 @@ function is(result, expected, name) {
 
 vm.runInThisContext(fs.readFileSync("cache-digests.js", "ascii"));
 
+ok(isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:12:00Z")), "expires-fresh");
+ok(!isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:13:00Z")), "expires-stale");
+ok(!isFresh([["Cache-Control", "must-revalidate, max-age=600"]], Date.parse("2016-06-27T02:12:00Z")), "max-age-wo-date");
+ok(isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:22:00Z")), "max-age-fresh");
+ok(!isFresh([["Cache-Control", "must-revalidate, max-age=600"], ["Date", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:23:00Z")), "max-age-stale");
 is((new BitCoder).gcsEncode([], 2).value, []);
 is((new BitCoder).gcsEncode([3, 10], 2).value, [0b11101100]);
 is((new BitCoder).gcsEncode([1025], 8).value, [0b00001000, 0b00001000]);

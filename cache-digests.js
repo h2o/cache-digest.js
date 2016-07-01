@@ -74,7 +74,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
         }
         evt.respondWith(caches.open("v1").then(function (cache) {
             return cache.match(req).then(function (res) {
-                if (res) {
+                if (res && isFresh(res.headers.entries(), Date.now())) {
                     logInfo(req, "hit");
                     return res;
                 }
@@ -94,7 +94,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                     }
                     return fetch(req).then(function (res) {
                         var cached = false;
-                        if (res.status == 200) {
+                        if (res.status == 200 && isFresh(res.headers.entries(), Date.now())) {
                             cache.put(req, res.clone());
                             cached = true;
                         }
@@ -130,7 +130,7 @@ function generateCacheDigests(cache) {
         return Promise.all(reqs.map(function (req) {
             var now = Date.now();
             return cache.match(req).then(function (resp) {
-                if (resp)
+                if (resp && isFresh(resp.headers.entries(), now))
                     hashes.push(sha256(req.url)[7] & 0x7fffffff);
             });
         })).then(function () {
@@ -145,6 +145,36 @@ function generateCacheDigests(cache) {
             return base64Encode(digestValue) + "; complete";
         });
     });
+}
+
+function isFresh(headers, now) {
+    var date = 0, maxAge = null;
+    for (var nv of headers) {
+        var name = nv[0], value = nv[1];
+        if (name.match(/^expires$/i) != null) {
+            var parsed = Date.parse(value);
+            if (parsed && parsed > now)
+                return true;
+        } else if (name.match(/^cache-control$/i) != null) {
+            var directives = value.split(/\s*,\s*/);
+            for (var d of directives) {
+                if (d.match(/^\s*no-(?:cache|store)\s*$/) != null) {
+                    return false;
+                } else if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null) {
+                    maxAge = Math.min(RegExp.$1, maxAge || Infinity);
+                }
+            }
+        } else if (name.match(/^date$/i) != null) {
+            date = Date.parse(value);
+        }
+    }
+
+    if (maxAge != null) {
+        if (date + maxAge * 1000 > now)
+            return true;
+    }
+
+    return false;
 }
 
 function BitCoder() {
