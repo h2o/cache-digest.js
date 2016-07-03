@@ -68,7 +68,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
     }
     self.addEventListener('fetch', function(evt) {
         var req = evt.request.clone();
-        if (req.method != "GET" || req.url.match(/\/cache-digests\.js(?:\?|$)/)) {
+        if (req.method != "GET" || req.url.match(/\/cache-digests?\.js(?:\?|$)/)) {
             logInfo(req, "skip");
             return;
         }
@@ -83,8 +83,8 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                         var err = null;
                         try {
                             req = new Request(req);
-                            req.headers.append("cache-digests", digests);
-                            if (req.headers.get("cache-digests") == null)
+                            req.headers.append("cache-digest", digests);
+                            if (req.headers.get("cache-digest") == null)
                                 err = "append failed";
                         } catch (e) {
                             err = e;
@@ -98,7 +98,7 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
                             cache.put(req, res.clone());
                             cached = true;
                         }
-                        logInfo(req, "fetched" + (cached ? " & cached" : "") + " with cache-digests:\"" + digests + "\"");
+                        logInfo(req, "fetched" + (cached ? " & cached" : "") + " with cache-digest:\"" + digests + "\"");
                         return res;
                     });
                 };
@@ -114,10 +114,10 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
 } else if (typeof navigator !== "undefined") {
 
     /* bootstrap, loaded via <script src=...> */
-    navigator.serviceWorker.register("/cache-digests.js", {scope: "./"}).then(function(reg) {
-        console.log("registered cache-digests.js service worker");
+    navigator.serviceWorker.register("/cache-digest.js", {scope: "./"}).then(function(reg) {
+        console.log("registered cache-digest.js service worker");
     }).catch(function(e) {
-        console.log("failed to register cache-digests.js service worker:" + e);
+        console.log("failed to register cache-digest.js service worker:" + e);
     });
 
 }

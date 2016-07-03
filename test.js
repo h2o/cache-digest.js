@@ -24,7 +24,7 @@ function is(result, expected, name) {
     }
 }
 
-vm.runInThisContext(fs.readFileSync("cache-digests.js", "ascii"));
+vm.runInThisContext(fs.readFileSync("cache-digest.js", "ascii"));
 
 ok(isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:12:00Z")), "expires-fresh");
 ok(!isFresh([["Expires", "Mon, 27 Jun 2016 02:12:35 GMT"]], Date.parse("2016-06-27T02:13:00Z")), "expires-stale");
