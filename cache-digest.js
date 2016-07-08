@@ -124,27 +124,31 @@ if (typeof self !== "undefined" && "ServiceWorkerGlobalScope" in self &&
 
 // returns a promise that returns the cache digest value
 function generateCacheDigests(cache) {
-    var hashes = [];
+    var urls = [];
     return cache.keys().then(function (reqs) {
         // collect 31-bit hashes of fresh responses
         return Promise.all(reqs.map(function (req) {
             var now = Date.now();
             return cache.match(req).then(function (resp) {
                 if (resp && isFresh(resp.headers.entries(), now))
-                    hashes.push(sha256(req.url)[7] & 0x7fffffff);
+                    urls.push(req.url);
             });
         })).then(function () {
-            var pbits = 7;
-            var nbits = Math.floor(Math.log(Math.max(hashes.length, 1)) / Math.log(2) + 0.7);
-            if (nbits + pbits > 31)
-                return null;
-            var mask = (1 << pbits + nbits) - 1;
-            for (var i = 0; i < hashes.length; ++i)
-                hashes[i] &= mask;
-            var digestValue = (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
-            return base64Encode(digestValue) + "; complete";
+            var dv = calcDigestValue(urls, 7);
+            return dv != null ? base64Encode(dv) + "; complete" : null;
         });
     });
+}
+
+function calcDigestValue(urls, pbits) {
+    var nbits = Math.round(Math.log(Math.max(urls.length, 1)) * 1.4426950408889634); // round log2(urls.length)
+    if (nbits + pbits > 31)
+        return null;
+    var mask = (1 << pbits + nbits) - 1;
+    var hashes = [];
+    for (var url of urls)
+        hashes.push(sha256(url)[7] & mask);
+    return (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits + nbits).value;
 }
 
 function isFresh(headers, now) {
