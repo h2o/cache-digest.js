@@ -3,7 +3,13 @@ cache-digest.js
 
 [![Build Status](https://travis-ci.org/h2o/cache-digest.js.svg?branch=master)](https://travis-ci.org/h2o/cache-digest.js)
 
-ServiceWorker implementation of Cache Digests for HTTP/2 (draft 01)
+ServiceWorker implementation of [Cache Digests for HTTP/2 (draft 01)](https://tools.ietf.org/html/draft-kazuho-h2-cache-digest-01)
+
+Warning
+------
+
+* WIP; the code is in early-beta stage
+* only supports sending of _fresh_ digests without etag
 
 How to Use
 ------
