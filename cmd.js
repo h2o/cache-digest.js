@@ -26,7 +26,7 @@ var fs = require("fs");
 
 vm.runInThisContext(fs.readFileSync("cache-digest.js", "ascii"));
 
-process.exit(function (argv) {
+function main(argv) {
     var pbits = 7;
     var useBase64 = false;
 
@@ -69,4 +69,6 @@ process.exit(function (argv) {
     }
 
     return 0;
-}(process.argv));
+}
+
+process.exit(main(process.argv));
