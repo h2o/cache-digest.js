@@ -41,14 +41,14 @@ function main(argv) {
             return 0;
         } else if (opt == "-b") {
             useBase64 = 1;
-        } else if (opt.match(/^-p(?:=(.*)|$)/) != null) {
-            if (RegExp.$1 != null) {
-                pbits = RegExp.$1;
+        } else if (opt.match(/^-p(?:(=(.*))|$)/) != null) {
+            if (RegExp.$1 != "") {
+                pbits = RegExp.$2 - 0;
             } else if (argv.length == 0) {
                 console.error("argument value missing for option: -p");
                 return 1;
             } else {
-                pbits = argv.shift();
+                pbits = argv.shift() - 0;
             }
         } else {
             console.error("Unknown option: %s", opt);
