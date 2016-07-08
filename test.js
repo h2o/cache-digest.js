@@ -62,8 +62,8 @@ is(sha256(""), [0xe3b0c442, 0x98fc1c14, 0x9afbf4c8, 0x996fb924, 0x27ae41e4, 0x64
 is(sha256("hello world"), [0xb94d27b9, 0x934d3e08, 0xa52e52d7, 0xda7dabfa, 0xc484efe3, 0x7a5380ee, 0x9088f7ac, 0xe2efcde9].map(function (v) { return v | 0; }), "sha256 hello world");
 is(calcDigestValue([], 7), [0x01, 0xc0]);
 is(calcDigestValue(["https://example.com/style.css"], 7), [0x01, 0xfa, 0xc0]);
-is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 7), [0x09, 0xed, 0x74, 0x90]);
-is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 4), [0x09, 0x2b, 0xa4]);
+is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 7), [0x09, 0xfa, 0xf2, 0x40]);
+is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 4), [0x09, 0x37, 0x90]);
 console.log("1.." + ntests);
 
 process.exit(failed ? 127 : 0);

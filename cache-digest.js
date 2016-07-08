@@ -148,7 +148,7 @@ function calcDigestValue(urls, pbits) {
     var hashes = [];
     for (var url of urls)
         hashes.push(sha256(url)[7] & mask);
-    return (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits + nbits).value;
+    return (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
 }
 
 function isFresh(headers, now) {
