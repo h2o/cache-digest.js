@@ -3,7 +3,7 @@ cache-digest.js
 
 [![Build Status](https://travis-ci.org/h2o/cache-digest.js.svg?branch=master)](https://travis-ci.org/h2o/cache-digest.js)
 
-ServiceWorker implementation of [Cache Digests for HTTP/2 (draft 01)](https://tools.ietf.org/html/draft-kazuho-h2-cache-digest-01)
+[Service Worker](https://developer.mozilla.org/docs/Web/API/Service_Worker_API) implementation of [Cache Digests for HTTP/2 (draft 01)](https://tools.ietf.org/html/draft-kazuho-h2-cache-digest-01)
 
 Warning
 ------
