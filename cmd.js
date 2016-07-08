@@ -57,7 +57,7 @@ process.exit(function (argv) {
     }
 
     var digest = calcDigestValue(argv, pbits);
-    if (pbits == null) {
+    if (digest == null) {
         console.error("failed to calculate the digests");
         return 1;
     }
