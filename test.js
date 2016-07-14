@@ -64,9 +64,9 @@ is(sha256Truncated("", 8), 0xe3);
 is(sha256Truncated("", 5), 0x1c);
 is(sha256Truncated("hello world", 11), 0x5ca);
 is(calcDigestValue([], 7), [0x01, 0xc0]);
-is(calcDigestValue(["https://example.com/style.css"], 7), [0x01, 0xfa, 0xc0]);
-is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 7), [0x09, 0xfa, 0xf2, 0x40]);
-is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 4), [0x09, 0x37, 0x90]);
+is(calcDigestValue(["https://example.com/style.css"], 7), [0x01, 0xf7, 0x40]);
+is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 7), [0x09, 0xd6, 0x50, 0xe0]);
+is(calcDigestValue(["https://example.com/style.css", "https://example.com/jquery.js"], 4), [0x09, 0x16, 0x80]);
 console.log("1.." + ntests);
 
 process.exit(failed ? 127 : 0);
