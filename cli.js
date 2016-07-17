@@ -24,7 +24,7 @@
 var vm = require("vm");
 var fs = require("fs");
 
-vm.runInThisContext(fs.readFileSync("cache-digest.js", "ascii"));
+vm.runInThisContext(fs.readFileSync(__dirname + "/cache-digest.js", "ascii"));
 
 function main(argv) {
     var pbits = 7;
