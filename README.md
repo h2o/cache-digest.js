@@ -27,7 +27,7 @@ You can run cli.js to calculate cache digests manually.
 
 ```
 % node cli.js -b https://example.com/style.css https://example.com/jquery.js https://example.com/shortcut.css
-EdcLLJA
+EeUM-QA
 ```
 
 In the above example, `-b` option is used so that the digest would be encoded using [base64url](https://tools.ietf.org/html/rfc4648#section-5). Please refer to `-h` (help) option for more information.
