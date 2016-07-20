@@ -130,22 +130,24 @@ function calcDigestValue(urls, pbits) {
     if (nbits + pbits > 31)
         return null;
     var hashes = [];
-    for (var url of urls)
-        hashes.push(sha256Truncated(url, nbits + pbits));
+    for (var i = 0; i != urls.length; ++i)
+        hashes.push(sha256Truncated(urls[i], nbits + pbits));
     return (new BitCoder).addBits(nbits, 5).addBits(pbits, 5).gcsEncode(hashes, pbits).value;
 }
 
 function isFresh(headers, now) {
     var date = 0, maxAge = null;
-    for (var nv of headers) {
-        var name = nv[0], value = nv[1];
+    var o;
+    while (!(o = headers.next()).done) {
+        var name = o.value[0], value = o.value[1];
         if (name.match(/^expires$/i) != null) {
             var parsed = Date.parse(value);
             if (parsed && parsed > now)
                 return true;
         } else if (name.match(/^cache-control$/i) != null) {
             var directives = value.split(/\s*,\s*/);
-            for (var d of directives) {
+            for (var i = 0; i != directives.length; ++i) {
+                var d = directives[i];
                 if (d.match(/^\s*no-(?:cache|store)\s*$/) != null) {
                     return false;
                 } else if (d.match(/^\s*max-age\s*=\s*([0-9]+)/) != null) {
@@ -229,8 +231,9 @@ var sha256=function(){var r=[-2147483648,8388608,32768,128],o=[24,16,8,0],a=[111
 
 function logRequest(req) {
     var s = req.method + " " + req.url + "\n";
-    for (var nv of req.headers.entries())
-        s += nv[0] + ": " + nv[1] + "\n";
+    var o;
+    for (var iter = req.headers.entries(); !(o = iter.next()).done;)
+        s += o.value[0] + ": " + o.value[1] + "\n";
     console.log(s);
 }
 function logError(req, msg) {
