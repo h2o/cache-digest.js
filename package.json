@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Service Worker implementation of Cache Digests for HTTP/2 (draft 01) https://tools.ietf.org/html/draft-kazuho-h2-cache-digest-01",
   "main": "cache-digest.js",
+  "bin": "cli.js",
   "scripts": {
     "test": "node test.js"
   },
