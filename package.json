@@ -1,0 +1,27 @@
+{
+  "name": "cache-digest",
+  "version": "1.0.0",
+  "description": "Service Worker implementation of Cache Digests for HTTP/2 (draft 01) https://tools.ietf.org/html/draft-kazuho-h2-cache-digest-01",
+  "main": "cache-digest.js",
+  "bin": "cli.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h2o/cache-digest.js.git"
+  },
+  "keywords": [
+    "http2",
+    "cache digests",
+    "server push",
+    "bloom filter",
+    "golomb coding"
+  ],
+  "author": "Kazuho Oku <kazuhooku@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/h2o/cache-digest.js/issues"
+  },
+  "homepage": "https://github.com/h2o/cache-digest.js#readme"
+}
