@@ -37,7 +37,7 @@ function main(argv) {
         if (opt == "-")
             break;
         if (opt == "-h" || opt == "--help") {
-            console.log("Usage: node cmd.js [-b] [-p=pbits] URL1 URL2...")
+            console.log("Usage: cache-digest [-b] [-p=pbits] URL1 URL2...")
             return 0;
         } else if (opt == "-b") {
             useBase64 = 1;
